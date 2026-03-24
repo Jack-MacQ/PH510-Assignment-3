@@ -17,4 +17,5 @@ This project is licensed under the MIT License.
 
 Author:
 
-Jack MacQuarrie MPhys Physics, University of Strathclyde
+Jack MacQuarrie
+MPhys Physics, University of Strathclyde
