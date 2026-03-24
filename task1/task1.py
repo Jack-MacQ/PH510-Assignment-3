@@ -1,6 +1,6 @@
 """
 Numerical solution of the two-dimensional Poisson equation on a square domain
-using successive over-relaxation (SOR).
+using successive over-relaxation (SOR)
 
 The solver works on a uniform N x N grid with Dirichlet boundary conditions,
 so the potential is fixed on all four edges of the domain. The source term can
