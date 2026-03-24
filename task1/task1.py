@@ -1,12 +1,19 @@
 """
 Numerical solution of the two-dimensional Poisson equation on a square domain
-using successive over-relaxation (SOR)
+using successive over-relaxation (SOR).
 
 The solver works on a uniform N x N grid with Dirichlet boundary conditions,
 so the potential is fixed on all four edges of the domain. The source term can
 either be zero, giving Laplace's equation, or non-zero for the Poisson case.
 
 This implementation was written as a deterministic reference solver for comparison with the random-walk method.
+
+Copyright (c) 2026 Jack MacQuarrie
+
+This code is released under the MIT License. See the LICENSE file in the
+repository for details.
+
+Python Version: 3.9.21
 """
 
 from __future__ import annotations
@@ -100,7 +107,7 @@ class PoissonSOR:
         self._phi[:, 0] = bottom
         self._phi[:, -1] = top
 
-        # Each corner belongs to two boundaries so using the average is a
+        # Each corner belongs to two boundaries so using the average is an
         # easy way to assign the corner values.
         self._phi[0, 0] = 0.5 * (left + bottom)
         self._phi[0, -1] = 0.5 * (left + top)
@@ -301,8 +308,9 @@ def plot_potential(
     xx, yy = np.meshgrid(x, y, indexing="ij")
 
     fig, ax = plt.subplots(figsize=(6, 5))
-    contour = ax.contourf(xx, yy, phi, levels=50, cmap="RdBu_r")
-    fig.colorbar(contour, ax=ax, label="Potential (V)")
+    contour = ax.contourf(xx, yy, phi, levels=50)
+    cbar = fig.colorbar(contour, ax=ax, label="Potential (V)")
+    cbar.set_ticks(np.linspace(-100, 100, 9))
 
     ax.set_xlabel("x (m)")
     ax.set_ylabel("y (m)")
