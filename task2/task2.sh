@@ -13,7 +13,7 @@
 #SBATCH --output=green_function-%j.out
 
 module purge
-module load openmpi/latest
+module load openmpi/gcc-14.2.1/4.1.8
 
 /opt/software/scripts/job_prologue.sh
 
