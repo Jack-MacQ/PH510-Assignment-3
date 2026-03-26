@@ -195,6 +195,8 @@ class GreenFunctionMC:
         # Independent RNG stream per rank
         seed_seq = np.random.SeedSequence(self.seed)
         rng = np.random.default_rng(seed_seq.spawn(self._size)[self._rank])
+
+        # Split walkers evenly across ranks
         base, remainder = divmod(self.n_walkers, self._size)
         local_n = base + (1 if self._rank < remainder else 0)
 
@@ -213,6 +215,7 @@ class GreenFunctionMC:
             local_visit_sum += v
             local_visit_sum2 += v * v
 
+        # Reduce results to rank 0
         global_hits = np.zeros_like(local_hits)
         global_sum = np.zeros_like(local_visit_sum)
         global_sum2 = np.zeros_like(local_visit_sum2)
@@ -231,12 +234,13 @@ class GreenFunctionMC:
 
         # Boundary Green's function (probabilities)
         G_laplace = global_hits / n_total
-        G_laplace_err = np.sqrt(np.maximum(G_laplace * (1 - G_laplace, 0) / n_total)
+        G_laplace_err = np.sqrt(np.maximum(G_laplace * (1 - G_laplace), 0) / n_total)
 
         # Charge Green's function
         mean_visits = global_sum / n_total
         G_charge = (self._h ** 2) * mean_visits
 
+        # Standard error via variance of visit counts
         var = (global_sum2 / n_total) - mean_visits**2
         var *= n_total / (n_total - 1.0)
         G_charge_err = (self._h ** 2) * np.sqrt(np.maximum(var, 0) / n_total)
@@ -265,6 +269,7 @@ class GreenFunctionMC:
         phi = 0.0
         phi_err_sq = 0.0
 
+        # Boundary contribution
         for idx in range(len(G_laplace)):
             i, j = self.linear_to_boundary(idx)
             phi += G_laplace[idx] * boundary_phi[i, j]
@@ -272,6 +277,7 @@ class GreenFunctionMC:
             if G_laplace_err is not None:
                 phi_err_sq += (G_laplace_err[idx] * boundary_phi[i, j]) ** 2
 
+        # Charge contribution
         phi += np.sum(G_charge * charge_density)
 
         if G_charge_err is not None:
@@ -288,7 +294,7 @@ class GreenFunctionMC:
         """Grid spacing h."""
         return self._h
 
-    property
+    @property
     def n_boundary_points(self) -> int:
         """Number of boundary points."""
         return 4 * (self.grid_size - 1)
