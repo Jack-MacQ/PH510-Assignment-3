@@ -1,0 +1,36 @@
+===================================================================================
+SLURM Job ID:            7286285
+Submit time:             Thu Mar 26 20:36:09 GMT 2026 (Unix Epoch time: 1774557369)
+Start time:              Thu Mar 26 20:36:10 GMT 2026 (Unix Epoch time: 1774557370)
+No. nodes:               1
+No. tasks:               16
+Job name:                task2
+Account:                 teaching
+QoS:                     teaching
+Partition (queue):       teaching
+Submit directory:        /users/dsb21135/PH510/PH510-Assignment-3/task2
+Script name:             /users/dsb21135/PH510/PH510-Assignment-3/task2/task2.sh
+Master node:             wee15
+Nodes used:              wee15
+Task distribution:       
+===================================================================================
+
+Grid: 101x101, h = 1.0 cm, 500000 walkers on 16 ranks
+------------------------------------------------------------
+
+Computing Green's function at (0.50 m, 0.50 m) -> grid (50, 50)
+  Wall time: 98.33 s
+  G_laplace sum: 1.000000  (expect 1.0)
+  G_laplace max standard error: 9.36e-05
+  G_charge max value: 3.5671e-04
+  G_charge max standard error: 4.28e-07
+  Saved plots/green_laplace_centre_50_50.png
+  Saved plots/green_charge_centre_50_50.png
+
+--- Check (uniform 1 V boundary, f = 0) ---
+  centre_50_50: phi = 1.000000 V  (err = 1.41e-03)  [expect 1.0]
+===================================================================================
+SLURM job 7286285 ended:     Thu Mar 26 20:37:57 GMT 2026 (Unix Epoch time: 1774557477)
+This is an estimated end time using the 'date' command from node wee15.hpc.strath.ac.uk
+For accurate timings, use 'sacct -j 7286285 -X --format=Submit,Start,End,Elapsed'
+======================================================================================
