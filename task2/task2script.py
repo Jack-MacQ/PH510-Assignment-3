@@ -78,7 +78,7 @@ def plot_green_function_laplace(
         ax.set_ylabel("j (grid index)")
 
     plt.tight_layout()
-    filename = f"green_laplace_{label.replace(' ', '_').replace(',', '')}.png"
+    filename = f"plots/green_laplace_{label.replace(' ', '_').replace(',', '')}.png"
     plt.savefig(filename, dpi=150)
     plt.close()
     print(f"  Saved {filename}")
@@ -106,7 +106,7 @@ def plot_green_function_charge(
         ax.set_ylabel("j (grid index)")
 
     plt.tight_layout()
-    filename = f"green_charge_{label.replace(' ', '_').replace(',', '')}.png"
+    filename = f"plots/green_charge_{label.replace(' ', '_').replace(',', '')}.png"
     plt.savefig(filename, dpi=150)
     plt.close()
     print(f"  Saved {filename}")
@@ -117,6 +117,12 @@ def main():
     Evaluate and save Green's functions at the three points specified for
     the later stages of the assignment.
     """
+    
+    import os
+    
+    os.makedirs("plots", exist_ok=True)
+    os.makedirs("data", exist_ok=True)
+    
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
@@ -175,10 +181,10 @@ def main():
             print(f"  G_charge max standard error: {G_C_err.max():.2e}")
 
             # Save arrays for later use in potential reconstruction
-            np.save(f"G_laplace_{label}.npy", G_L)
-            np.save(f"G_laplace_err_{label}.npy", G_L_err)
-            np.save(f"G_charge_{label}.npy", G_C)
-            np.save(f"G_charge_err_{label}.npy", G_C_err)
+            np.save(f"data/G_laplace_{label}.npy", G_L)
+            np.save(f"data/G_laplace_err_{label}.npy", G_L_err)
+            np.save(f"data/G_charge_{label}.npy", G_C)
+            np.save(f"data/G_charge_err_{label}.npy", G_C_err)
 
             # Save figures for inspection
             plot_green_function_laplace(G_L, G_L_err, solver, label)
@@ -195,7 +201,7 @@ def main():
     # Simple consistency check:
     # with boundary phi = 1 everywhere and zero charge, the result should be 1
     if rank == 0:
-        print("\n--- Sanity check (uniform 1 V boundary, f = 0) ---")
+        print("\n--- Check (uniform 1 V boundary, f = 0) ---")
         n = solver.grid_size
         uniform_bc = np.ones((n, n), dtype=np.float64)
         zero_charge = np.zeros((n, n), dtype=np.float64)
