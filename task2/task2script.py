@@ -147,16 +147,14 @@ def main():
         )
         print("-" * 60)
 
-    # The three points used in task 3
-    task3_points = {
-        "centre_50_50": (0.50, 0.50),
-        "corner_02_02": (0.02, 0.02),
-        "midface_02_50": (0.02, 0.50),
+    # The centre point
+    centre_point = {
+        "centre_50_50": (0.50, 0.50)
     }
 
     results = {}
 
-    for label, (x, y) in task3_points.items():
+    for label, (x, y) in centre_point.items():
         si = solver.coord_to_index(x)
         sj = solver.coord_to_index(y)
 
