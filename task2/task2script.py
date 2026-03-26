@@ -40,7 +40,7 @@ def make_boundary_array(
     return phi
 
 
-def plot_green_function_laplace
+def plot_green_function_laplace(
     G_laplace: np.ndarray,
     G_laplace_err: np.ndarray,
     solver: GreenFunctionMC,
@@ -54,11 +54,15 @@ def plot_green_function_laplace
     more clearly.
     """
     n = solver.grid_size
+    n_b = solver.n_boundary_points
+    phi_map = np.zeros((n, n))
+    err_map = np.zeros((n, n))
 
+    # Put the boundary values back onto a 2D grid for plotting
     for b_idx in range(n_b):
         bi, bj = solver.linear_to_boundary(b_idx)
         phi_map[bi, bj] = G_laplace[b_idx]
-        err_map[bi, bj] = G_laplace_err[b_ix]
+        err_map[bi, bj] = G_laplace_err[b_idx]
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
@@ -117,6 +121,7 @@ def main():
     rank = comm.Get_rank()
     size = comm.Get_size()
 
+    # Grid and Monte Carlo setup
     N = 101
     LENGTH = 1.0
     N_WALKERS = 500_000
@@ -136,6 +141,7 @@ def main():
         )
         print("-" * 60)
 
+    # The three points used in task 3
     task3_points = {
         "centre_50_50": (0.50, 0.50),
         "corner_02_02": (0.02, 0.02),
@@ -161,17 +167,20 @@ def main():
         if rank == 0:
             wall_time = t1 - t0
 
+            # Basic checks on the output
             print(f"  Wall time: {wall_time:.2f} s")
             print(f"  G_laplace sum: {G_L.sum():.6f}  (expect 1.0)")
             print(f"  G_laplace max standard error: {G_L_err.max():.2e}")
             print(f"  G_charge max value: {G_C.max():.4e}")
             print(f"  G_charge max standard error: {G_C_err.max():.2e}")
 
+            # Save arrays for later use in potential reconstruction
             np.save(f"G_laplace_{label}.npy", G_L)
             np.save(f"G_laplace_err_{label}.npy", G_L_err)
             np.save(f"G_charge_{label}.npy", G_C)
             np.save(f"G_charge_err_{label}.npy", G_C_err)
 
+            # Save figures for inspection
             plot_green_function_laplace(G_L, G_L_err, solver, label)
             plot_green_function_charge(G_C, G_C_err, label)
 
@@ -183,6 +192,8 @@ def main():
                 "time": wall_time,
             }
 
+    # Simple consistency check:
+    # with boundary phi = 1 everywhere and zero charge, the result should be 1
     if rank == 0:
         print("\n--- Sanity check (uniform 1 V boundary, f = 0) ---")
         n = solver.grid_size
