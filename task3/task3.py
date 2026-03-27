@@ -71,29 +71,6 @@ def point_name(key: str) -> str:
     return POINTS[key]["name"]
 
 
-def unfold_boundary(g_laplace: np.ndarray, n: int, length: float) -> tuple:
-    """
-    Convert the 1D boundary Green's function into a perimeter coordinate.
-
-    This is used for the line plots, where the boundary data are shown as a
-    function of distance around the square boundary. The ordering is assumed
-    to match the ordering used internally by the solver.
-    """
-    # Grid spacing in metres.
-    h = length / (n - 1)
-
-    # Number of boundary intervals around the square.
-    total = 4 * (n - 1)
-
-    # Arc-length coordinate running once around the boundary.
-    return (
-        np.arange(total, dtype=np.float64) * h,
-        np.array(g_laplace[:total], copy=True),
-        [0.0, (n - 1) * h, 2.0 * (n - 1) * h, 3.0 * (n - 1) * h, 4.0 * (n - 1) * h],
-        ["(0,0) m", "(1,0) m", "(1,1) m", "(0,1) m", "(0,0) m"],
-    )
-
-
 def boundary_to_grid(
     values: np.ndarray,
     errors: np.ndarray,
@@ -251,54 +228,6 @@ def plot_charge_maps(
         "plasma",
         f"charge_maps_{key}.png",
     )
-
-
-def plot_boundary_exit_distribution(
-    g_laplace: np.ndarray,
-    g_laplace_err: np.ndarray,
-    solver: GreenFunctionMC,
-    key: str,
-) -> None:
-    """
-    Plot the boundary exit probability around the square perimeter.
-
-    The shaded band shows the estimated one-sigma uncertainty from the Monte
-    Carlo sampling.
-    """
-    # Convert the boundary data into a 1D perimeter representation.
-    arc, vals, ticks, tick_labels = unfold_boundary(g_laplace, solver.grid_size, LENGTH)
-    _, errs, _, _ = unfold_boundary(g_laplace_err, solver.grid_size, LENGTH)
-
-    fig, ax = plt.subplots(1, 1, figsize=(10.0, 4.8), constrained_layout=True)
-
-    # Plot the Monte Carlo mean together with a one-sigma error band.
-    ax.fill_between(arc, vals - errs, vals + errs, alpha=0.30, label=r"$\pm 1\sigma$")
-    ax.plot(arc, vals, lw=1.3, label="Exit probability")
-    ax.set_xticks(ticks)
-    ax.set_xticklabels(tick_labels, fontsize=9)
-    ax.set_xlim(arc[0], arc[-1])
-    ax.set_xlabel("Arc length along boundary (m)", fontsize=10)
-    ax.set_ylabel("Exit probability", fontsize=10)
-    ax.set_title(
-        "Boundary exit probabilities\n" + full_point_label(key),
-        fontsize=10.5,
-        pad=8,
-    )
-
-    # Draw guide lines at the four corners.
-    for tick in ticks[1:-1]:
-        ax.axvline(tick, color="gray", lw=0.7, ls="--")
-
-    ax.grid(axis="y", alpha=0.3)
-    ax.tick_params(labelsize=9)
-    ax.legend(fontsize=9, loc="best")
-
-    plt.savefig(
-        os.path.join("plots", f"boundary_exit_distribution_{key}.png"),
-        dpi=150,
-        bbox_inches="tight",
-    )
-    plt.close()
 
 
 def plot_comparison_summary(results: dict, solver: GreenFunctionMC) -> None:
@@ -568,7 +497,6 @@ def main() -> None:
             res = results[key]
             plot_boundary_exit_maps(res["G_L"], res["G_L_err"], solver, key)
             plot_charge_maps(res["G_C"], res["G_C_err"], key)
-            plot_boundary_exit_distribution(res["G_L"], res["G_L_err"], solver, key)
 
         plot_comparison_summary(results, solver)
         print_summary_table(results, solver)
