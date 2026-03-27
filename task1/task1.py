@@ -6,7 +6,8 @@ The solver works on a uniform N x N grid with Dirichlet boundary conditions,
 so the potential is fixed on all four edges of the domain. The source term can
 either be zero, giving Laplace's equation, or non-zero for the Poisson case.
 
-This implementation was written as a deterministic reference solver for comparison with the random-walk method.
+This implementation was written as a deterministic reference solver for
+comparison with the random-walk method.
 
 Copyright (c) 2026 Jack MacQuarrie
 
@@ -65,18 +66,17 @@ class PoissonSOR:
 
     _phi: np.ndarray = field(init=False, repr=False)
     _f: np.ndarray = field(init=False, repr=False)
-    _h: float = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         """Set up the grid spacing and initialise the potential and source arrays."""
         if self.grid_size < 3:
             raise ValueError("grid_size must be at least 3")
 
-        self._h = self.length / (self.grid_size - 1)
         self._phi = np.zeros((self.grid_size, self.grid_size), dtype=np.float64)
         self._f = np.zeros((self.grid_size, self.grid_size), dtype=np.float64)
 
-        # Use a standard near-optimal SOR parameter for a square grid (unless it is provided specifically)
+        # Use a standard near-optimal SOR parameter for a square grid unless
+        # it is provided specifically.
         if self.omega is None:
             self.omega = 2.0 / (1.0 + math.sin(math.pi / self.grid_size))
 
@@ -150,7 +150,8 @@ class PoissonSOR:
         expected_shape = (self.grid_size, self.grid_size)
         if f_array.shape != expected_shape:
             raise ValueError(
-                f"f_array must have shape {expected_shape}, got {f_array.shape}"
+                f"f_array must have shape {expected_shape}, "
+                f"got {f_array.shape}"
             )
 
         self._f = f_array.copy()
@@ -175,7 +176,7 @@ class PoissonSOR:
         """
         phi = self._phi.copy()
         f = self._f
-        h2 = self._h * self._h
+        h2 = self.grid_spacing * self.grid_spacing
         omega = float(self.omega)
 
         max_change = float("inf")
@@ -204,8 +205,7 @@ class PoissonSOR:
                     phi[i, j] = new_value
 
                     change = abs(new_value - old_value)
-                    if change > max_change:
-                        max_change = change
+                    max_change = max(max_change, change)
 
             if max_change < self.tolerance:
                 if verbose:
@@ -229,7 +229,7 @@ class PoissonSOR:
     @property
     def grid_spacing(self) -> float:
         """Return the uniform grid spacing."""
-        return self._h
+        return self.length / (self.grid_size - 1)
 
     @property
     def x_coords(self) -> np.ndarray:
@@ -252,8 +252,8 @@ class PoissonSOR:
         y :
             y coordinate in metres.
         """
-        i = int(round(x / self._h))
-        j = int(round(y / self._h))
+        i = int(round(x / self.grid_spacing))
+        j = int(round(y / self.grid_spacing))
 
         # Clip indices so that coordinates slightly outside the domain are
         # mapped to the nearest valid grid point.
@@ -297,7 +297,7 @@ def exponential_central_charge(grid_size: int, length: float) -> np.ndarray:
 def plot_potential(
     phi: np.ndarray,
     length: float = 1.0,
-    title: str = "Potential"
+    title: str = "Potential",
 ) -> None:
     """
     Plot the potential as a filled contour map over the square domain.
@@ -347,7 +347,8 @@ def main() -> None:
         tolerance=1e-8,
     )
 
-    # Example Laplace case: top and bottom held at +100 V, left and right at -100 V.
+    # Example Laplace case: top and bottom held at +100 V, left and right at
+    # -100 V.
     solver.set_boundary(
         top=100.0,
         bottom=100.0,
@@ -355,7 +356,8 @@ def main() -> None:
         right=-100.0,
     )
 
-    # Zero source term gives Laplace's equation rather than the full Poisson case.
+    # Zero source term gives Laplace's equation rather than the full Poisson
+    # case.
     solver.set_charge(uniform_charge(solver.grid_size, 0.0))
 
     phi = solver.solve(verbose=True)
