@@ -270,11 +270,8 @@ def evaluate_all(
 # ----------------
 
 def print_results_table(all_results: list) -> None:
-    """Print a formatted table of all Task 4 potentials to stdout.
+    """Print a formatted table of all Task 4 potentials to stdout."""
 
-    Args:
-        all_results: List of PotentialResult objects.
-    """
     combos_seen = []
     combo_map = {}
     for result in all_results:
@@ -284,40 +281,66 @@ def print_results_table(all_results: list) -> None:
             combos_seen.append(key)
         combo_map[key].append(result)
 
-    sep = "=" * 100
+    bc_width = 38
+    charge_width = 24
+    value_width = 16
+    error_width = 16
+
+    gap = "     "         # wider gap for numbers
+    header_gap = "   "    # smaller gap for headers
+
+    point_headers = {
+        "centre": "Centre (0.50,0.50)",
+        "corner": "Corner (0.02,0.02)",
+        "midface": "Mid-face (0.02,0.50)",
+    }
+
+    header = (
+        f"{'BC':<{bc_width}} "
+        f"{'Charge':<{charge_width}} "
+        f"{point_headers['centre']:>{value_width}} "
+        f"{point_headers['corner']:>{value_width}} "
+        f"{point_headers['midface']:>{value_width}}"
+        f"{header_gap}"
+        f"{'sigma Centre':>{error_width}} "
+        f"{'sigma Corner':>{error_width}} "
+        f"{'sigma Mid-face':>{error_width}}"
+    )
+
+    sep = "=" * len(header)
+
     print()
     print(sep)
     print("Task 4 - Potentials from Green's function")
     print(sep)
-
-    point_names = {key: POINTS[key]["name"] for key in POINTS}
-
-    header = (
-        f"  {'BC':<42} {'Charge':<27}"
-        + "".join(f" {point_names[key]:>12}" for key in POINTS)
-        + "".join(f" {'+/- ' + point_names[key]:>10}" for key in POINTS)
-    )
     print(header)
-    print("-" * 100)
+    print("-" * len(header))
 
     prev_bc = None
-    for (bc_label, charge_label), rows in zip(combos_seen, combo_map.values()):
+    for bc_label, charge_label in combos_seen:
         if prev_bc is not None and bc_label != prev_bc:
             print()
         prev_bc = bc_label
 
+        rows = combo_map[(bc_label, charge_label)]
         row_vals = {row.point_key: row for row in rows}
+
         line = (
-            f"  {bc_label:<42} {charge_label:<27}"
-            + "".join(f" {row_vals[key].phi:>12.4f}" for key in POINTS)
-            + "".join(f" {row_vals[key].phi_err:>10.2e}" for key in POINTS)
+            f"{bc_label:<{bc_width}} "
+            f"{charge_label:<{charge_width}} "
+            f"{row_vals['centre'].phi:>{value_width}.4f} "
+            f"{row_vals['corner'].phi:>{value_width}.4f} "
+            f"{row_vals['midface'].phi:>{value_width}.4f}"
+            f"{gap}"
+            f"{row_vals['centre'].phi_err:>{error_width}.2e} "
+            f"{row_vals['corner'].phi_err:>{error_width}.2e} "
+            f"{row_vals['midface'].phi_err:>{error_width}.2e}"
         )
         print(line)
 
     print(sep)
-    print("  Potentials in Volts. +/- is the one-sigma MC error from error propagation.")
+    print("Potentials in Volts. sigma denotes the one-sigma Monte Carlo uncertainty.")
     print(sep)
-
 
 def save_results_csv(all_results: list, filename: str = "task4_results.csv") -> None:
     """Save all Task 4 results to a CSV file for Task 5 comparison.
