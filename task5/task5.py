@@ -27,6 +27,8 @@ import csv
 import numpy as np
 from dataclasses import dataclass
 
+# Reuse the deterministic Poisson solver from Task 1 rather than duplicating
+# the relaxation code here.
 sys.path.append(os.path.abspath("../task1"))
 from task1 import PoissonSOR
 
@@ -35,17 +37,21 @@ from task1 import PoissonSOR
 #  Configuration
 # ---------------
 
+# These settings should match the earlier tasks exactly. In particular,
+# the grid size and physical length must be the same as those used when
+# the Task 4 Monte Carlo results were generated.
 N = 101
 LENGTH = 1.0
 
+# The same three sample points used throughout Tasks 3, 4 and 5.
 POINTS = {
     "centre": {"name": "Centre", "xy": (0.50, 0.50)},
     "corner": {"name": "Near corner", "xy": (0.02, 0.02)},
     "midface": {"name": "Mid-face", "xy": (0.02, 0.50)},
 }
 
-# Use a fairly tight tolerance so the deterministic values are converged
-# well beyond the Monte Carlo error bars.
+# Use a reasonably tight tolerance so the deterministic SOR values are
+# converged much more strongly than the Monte Carlo uncertainties.
 SOR_TOLERANCE = 1e-8
 
 
@@ -56,7 +62,14 @@ SOR_TOLERANCE = 1e-8
 # and uses exactly the same cases and labels.
 
 def bc_all_plus100(n: int) -> np.ndarray:
-    """Construct the uniform +100 V boundary condition."""
+    """Construct the uniform +100 V boundary condition.
+
+    Args:
+        n: Grid size.
+
+    Returns:
+        N x N boundary array with all four edges fixed at +100 V.
+    """
     phi = np.zeros((n, n), dtype=np.float64)
     phi[0, :] = 100.0
     phi[-1, :] = 100.0
@@ -66,7 +79,14 @@ def bc_all_plus100(n: int) -> np.ndarray:
 
 
 def bc_tb_plus_lr_minus(n: int) -> np.ndarray:
-    """Construct the case with top/bottom at +100 V and left/right at -100 V."""
+    """Construct the case with top/bottom at +100 V and left/right at -100 V.
+
+    Args:
+        n: Grid size.
+
+    Returns:
+        N x N boundary array.
+    """
     phi = np.zeros((n, n), dtype=np.float64)
     phi[0, :] = -100.0
     phi[-1, :] = -100.0
@@ -76,7 +96,14 @@ def bc_tb_plus_lr_minus(n: int) -> np.ndarray:
 
 
 def bc_mixed(n: int) -> np.ndarray:
-    """Construct the mixed boundary condition from the assignment."""
+    """Construct the mixed boundary condition from the assignment.
+
+    Args:
+        n: Grid size.
+
+    Returns:
+        N x N boundary array.
+    """
     phi = np.zeros((n, n), dtype=np.float64)
     phi[0, :] = 200.0
     phi[-1, :] = -400.0
@@ -86,38 +113,89 @@ def bc_mixed(n: int) -> np.ndarray:
 
 
 def charge_uniform(n: int, length: float) -> np.ndarray:
-    """Construct the uniform 10 C charge density."""
+    """Construct the uniform 10 C charge density.
+
+    The assignment specifies 10 C spread uniformly over a 1 m^2 domain,
+    giving a constant density of 10 C/m^2 for the present case.
+
+    Args:
+        n: Grid size.
+        length: Physical side length in metres.
+
+    Returns:
+        N x N charge-density array.
+    """
     return np.full((n, n), 10.0 / length ** 2, dtype=np.float64)
 
 
 def charge_gradient(n: int, length: float) -> np.ndarray:
-    """Construct the linear charge gradient from bottom to top."""
+    """Construct the linear charge gradient from bottom to top.
+
+    The density varies from 0 at the bottom edge to 1 C/m^2 at the top edge.
+
+    Args:
+        n: Grid size.
+        length: Physical side length in metres.
+
+    Returns:
+        N x N charge-density array.
+    """
     y = np.linspace(0.0, 1.0, n, dtype=np.float64)
     f = np.zeros((n, n), dtype=np.float64)
+
+    # Broadcast the 1D vertical profile across the full grid.
     f[:, :] = y[np.newaxis, :]
     return f
 
 
 def charge_exponential(n: int, length: float) -> np.ndarray:
-    """Construct the centred exponential charge distribution exp(-10 |r|)."""
+    """Construct the centred exponential charge distribution exp(-10 |r|).
+
+    The distribution is centred at the geometric middle of the square domain.
+
+    Args:
+        n: Grid size.
+        length: Physical side length in metres.
+
+    Returns:
+        N x N charge-density array.
+    """
     x = np.linspace(0.0, length, n, dtype=np.float64)
     y = np.linspace(0.0, length, n, dtype=np.float64)
+
+    # Use ij indexing so the array layout remains consistent with the rest
+    # of the code and the underlying solver.
     xx, yy = np.meshgrid(x, y, indexing="ij")
+
     cx = cy = length / 2.0
     r = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2)
     return np.exp(-10.0 * r)
 
 
 def build_combinations(n: int, length: float) -> list:
-    """Return the same ordered list of combinations used in task4.py."""
+    """Return the same ordered list of combinations used in task4.py.
+
+    The ordering is kept identical so that the Task 5 comparison is directly
+    consistent with the Task 4 output.
+
+    Args:
+        n: Grid size.
+        length: Physical side length in metres.
+
+    Returns:
+        List of dictionaries containing labels and the corresponding
+        boundary/charge arrays.
+    """
     zero = np.zeros((n, n), dtype=np.float64)
 
+    # Pre-build all required boundary conditions.
     bcs = [
         ("All edges +100 V", bc_all_plus100(n)),
         ("Top/bot +100 V, left/right -100 V", bc_tb_plus_lr_minus(n)),
         ("Top/left +200 V, bot 0 V, right -400 V", bc_mixed(n)),
     ]
 
+    # Pre-build the internal charge cases, including the zero-charge case.
     charges = [
         ("f = 0", zero),
         ("Uniform 10 C", charge_uniform(n, length)),
@@ -127,7 +205,7 @@ def build_combinations(n: int, length: float) -> list:
 
     combos = []
 
-    # Add the three Laplace-only cases.
+    # Add the three Laplace-only cases first.
     for bc_label, bc in bcs:
         combos.append({
             "bc_label": bc_label,
@@ -136,7 +214,7 @@ def build_combinations(n: int, length: float) -> list:
             "charge": zero,
         })
 
-    # Add the nine Poisson cases.
+    # Then add the nine Poisson cases in the same order as Task 4.
     for charge_label, charge in charges[1:]:
         for bc_label, bc in bcs:
             combos.append({
@@ -160,6 +238,9 @@ def run_sor(
     length: float,
 ) -> np.ndarray:
     """Run the SOR solver for one boundary/charge combination.
+
+    This is the deterministic reference calculation used to check the
+    Monte Carlo Green's function results from Task 4.
 
     Args:
         bc_array: N x N array containing the fixed boundary potentials.
@@ -193,6 +274,9 @@ def extract_sor_values(phi: np.ndarray, h: float) -> dict:
     values = {}
     for key, info in POINTS.items():
         x_val, y_val = info["xy"]
+
+        # The physical coordinates are mapped to the nearest grid indices,
+        # which is exact for the present choice of grid and sample points.
         i_idx = round(x_val / h)
         j_idx = round(y_val / h)
         values[key] = float(phi[i_idx, j_idx])
@@ -206,6 +290,9 @@ def extract_sor_values(phi: np.ndarray, h: float) -> dict:
 @dataclass
 class ComparisonRow:
     """Store one row of the Task 5 comparison table.
+
+    Each row corresponds to one evaluation point for one particular
+    boundary-condition / charge-distribution combination.
 
     Attributes:
         bc_label: Boundary condition description.
@@ -269,6 +356,9 @@ def load_task4_csv(path: str) -> dict:
 def print_comparison_table(rows: list) -> None:
     """Print the full comparison table to stdout.
 
+    The table is grouped by boundary condition and charge case so that it can
+    be read alongside the Task 4 output without changing the ordering.
+
     Args:
         rows: List of ComparisonRow objects.
     """
@@ -279,6 +369,7 @@ def print_comparison_table(rows: list) -> None:
         group_key = (row.bc_label, row.charge_label)
         groups.setdefault(group_key, []).append(row)
 
+    # Fixed widths help keep the terminal output readable.
     bc_width = 38
     charge_width = 24
     point_width = 13
@@ -314,6 +405,8 @@ def print_comparison_table(rows: list) -> None:
     prev_bc = None
 
     for (bc_label, charge_label), group_rows in groups.items():
+        # Leave a blank line between boundary-condition blocks so the table
+        # is easier to scan by eye.
         if prev_bc is not None and bc_label != prev_bc:
             print()
         prev_bc = bc_label
@@ -355,6 +448,10 @@ def save_comparison_csv(
 ) -> None:
     """Save the comparison table to CSV for reference.
 
+    This file is intended to provide a compact machine-readable summary of
+    the Task 5 comparison, which can also be imported easily into a report,
+    spreadsheet, or plotting workflow later if needed.
+
     Args:
         rows: List of ComparisonRow objects.
         filename: Output filename inside the data directory.
@@ -393,7 +490,13 @@ def save_comparison_csv(
 # ------
 
 def main() -> None:
-    """Run the full Task 5 comparison workflow."""
+    """Run the full Task 5 comparison workflow.
+
+    The script loads the Task 4 Monte Carlo results, rebuilds the same
+    boundary-condition and charge-distribution cases, solves them again with
+    the deterministic SOR method, and compares the two sets of results at the
+    three required sample points.
+    """
     os.makedirs("data", exist_ok=True)
 
     h = LENGTH / (N - 1)
@@ -407,7 +510,8 @@ def main() -> None:
     mc_data = load_task4_csv(task4_csv)
     print(f"  Loaded {len(mc_data)} entries.")
 
-    # Rebuild the same list of cases used in Task 4.
+    # Rebuild the same list of cases used in Task 4 so the comparison is
+    # made case-by-case without any mismatch in ordering or labels.
     combos = build_combinations(N, LENGTH)
     print(f"\nRunning SOR solver for {len(combos)} combinations...")
 
@@ -417,7 +521,10 @@ def main() -> None:
         label = f"{combo['bc_label']} | {combo['charge_label']}"
         print(f"  [{combo_idx + 1:2d}/{len(combos)}] {label}")
 
+        # Solve the deterministic problem for the full grid.
         phi_sor = run_sor(combo["bc"], combo["charge"], N, LENGTH)
+
+        # Extract only the three points required for the assignment.
         sor_vals = extract_sor_values(phi_sor, h)
 
         for key in POINTS:
@@ -432,7 +539,12 @@ def main() -> None:
 
             phi_mc, phi_mc_err = mc_entry
             diff = phi_mc - sor_vals[key]
+
+            # Express the discrepancy in units of the Monte Carlo uncertainty.
+            # This gives a simple, physically meaningful comparison measure.
             n_sigma = abs(diff) / phi_mc_err if phi_mc_err > 0 else 0.0
+
+            # Use a 2 sigma agreement test as a straightforward consistency check.
             agrees = abs(diff) <= 2.0 * phi_mc_err
 
             comparison_rows.append(
@@ -449,7 +561,7 @@ def main() -> None:
                 )
             )
 
-    # Print and save the comparison results.
+    # Print and save the comparison results once all 36 rows have been built.
     print_comparison_table(comparison_rows)
     save_comparison_csv(comparison_rows)
 
