@@ -37,11 +37,14 @@ from green_function import GreenFunctionMC
 # Configuration
 # ---------------------------------------------------------------------
 
+# Grid size, physical side length, Monte Carlo sample count, and RNG seed.
 N = 101
 LENGTH = 1.0
 N_WALKERS = 1_000_000
 SEED = 12345
 
+# Task 3 evaluation points.
+# Each entry stores a short label and the physical coordinates in metres.
 POINTS = {
     "centre": {"name": "Centre", "xy": (0.50, 0.50)},
     "corner": {"name": "Near corner", "xy": (0.02, 0.02)},
@@ -76,9 +79,13 @@ def unfold_boundary(g_laplace: np.ndarray, n: int, length: float) -> tuple:
     function of distance around the square boundary. The ordering is assumed
     to match the ordering used internally by the solver.
     """
+    # Grid spacing in metres.
     h = length / (n - 1)
+
+    # Number of boundary intervals around the square.
     total = 4 * (n - 1)
 
+    # Arc-length coordinate running once around the boundary.
     return (
         np.arange(total, dtype=np.float64) * h,
         np.array(g_laplace[:total], copy=True),
@@ -99,9 +106,12 @@ def boundary_to_grid(
     they are ignored in the 2D boundary plots.
     """
     n = solver.grid_size
+
+    # Initialise full grids as NaN so only the boundary is visible when plotted.
     val_grid = np.full((n, n), np.nan, dtype=np.float64)
     err_grid = np.full((n, n), np.nan, dtype=np.float64)
 
+    # Map each boundary index used by the solver back to a 2D grid location.
     for b_idx in range(solver.n_boundary_points):
         i, j = solver.linear_to_boundary(b_idx)
         val_grid[i, j] = values[b_idx]
@@ -120,9 +130,11 @@ def sci_tick_label_math(x: float, pos: int) -> str:
     if np.isclose(x, 0.0):
         return "0"
 
+    # Write x = mantissa x 10^exponent.
     exponent = int(np.floor(np.log10(abs(x))))
     mantissa = x / (10.0 ** exponent)
 
+    # Show pure powers of ten cleanly when the mantissa is effectively 1.
     if np.isclose(mantissa, 1.0, rtol=1.0e-10, atol=1.0e-12):
         return rf"$10^{{{exponent:d}}}$"
 
@@ -142,6 +154,8 @@ def add_sci_colorbar(fig, mappable, ax, label: str):
     )
     cbar.set_label(label, fontsize=10)
     cbar.ax.tick_params(labelsize=9)
+
+    # Hide matplotlib's default offset text so only the custom labels are shown.
     cbar.ax.yaxis.get_offset_text().set_visible(False)
     cbar.update_ticks()
     return cbar
@@ -162,9 +176,12 @@ def plot_two_maps(
     Draw a pair of 2D maps with a consistent layout and colour-bar style.
     """
     fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.8), constrained_layout=True)
+
+    # The plots all span the physical square 0 <= x,y <= 1 m.
     extent = (0.0, LENGTH, 0.0, LENGTH)
     point_text = full_point_label(key)
 
+    # Plot left and right panels using the same formatting.
     for ax, data, title, cbar_label in (
         (axes[0], left_data, left_title, left_cbar),
         (axes[1], right_data, right_title, right_cbar),
@@ -199,6 +216,7 @@ def plot_boundary_exit_maps(
     """
     Plot the boundary exit probabilities and their estimated error as 2D maps.
     """
+    # Put the 1D boundary data back onto the square perimeter for plotting.
     val_grid, err_grid = boundary_to_grid(g_laplace, g_laplace_err, solver)
 
     plot_two_maps(
@@ -247,11 +265,13 @@ def plot_boundary_exit_distribution(
     The shaded band shows the estimated one-sigma uncertainty from the Monte
     Carlo sampling.
     """
+    # Convert the boundary data into a 1D perimeter representation.
     arc, vals, ticks, tick_labels = unfold_boundary(g_laplace, solver.grid_size, LENGTH)
     _, errs, _, _ = unfold_boundary(g_laplace_err, solver.grid_size, LENGTH)
 
     fig, ax = plt.subplots(1, 1, figsize=(10.0, 4.8), constrained_layout=True)
 
+    # Plot the Monte Carlo mean together with a one-sigma error band.
     ax.fill_between(arc, vals - errs, vals + errs, alpha=0.30, label=r"$\pm 1\sigma$")
     ax.plot(arc, vals, lw=1.3, label="Exit probability")
     ax.set_xticks(ticks)
@@ -265,7 +285,7 @@ def plot_boundary_exit_distribution(
         pad=8,
     )
 
-    # Draw guide lines at the corners so the four edges are easier to identify.
+    # Draw guide lines at the four corners.
     for tick in ticks[1:-1]:
         ax.axvline(tick, color="gray", lw=0.7, ls="--")
 
@@ -295,6 +315,7 @@ def plot_comparison_summary(results: dict, solver: GreenFunctionMC) -> None:
     for col, key in enumerate(POINTS):
         point_text = full_point_label(key)
 
+        # Top row: charge Green's function.
         ax_top = axes[0, col]
         im1 = ax_top.imshow(
             results[key]["G_C"].T,
@@ -309,6 +330,7 @@ def plot_comparison_summary(results: dict, solver: GreenFunctionMC) -> None:
         ax_top.set_ylabel("y (m)", fontsize=9)
         ax_top.tick_params(labelsize=8)
 
+        # Bottom row: boundary exit probability mapped back onto the boundary.
         val_grid, _ = boundary_to_grid(
             results[key]["G_L"],
             results[key]["G_L_err"],
@@ -363,6 +385,8 @@ def load_or_compute(
     rerun without repeating the full Monte Carlo calculation each time.
     """
     paths = data_paths(key)
+
+    # Only rank 0 checks the filesystem, then broadcasts the result.
     have_cache = rank == 0 and use_cache and all(os.path.exists(path) for path in paths.values())
     have_cache = MPI.COMM_WORLD.bcast(have_cache, root=0)
 
@@ -376,8 +400,11 @@ def load_or_compute(
                 "G_C_err": np.load(paths["G_C_err"]),
                 "time": time.perf_counter() - t0,
             }
+
+        # Non-root ranks still return a dictionary for consistency.
         return {"G_L": None, "G_L_err": None, "G_C": None, "G_C_err": None, "time": 0.0}
 
+    # If no cache is present, all ranks take part in the Monte Carlo solve.
     t0 = time.perf_counter()
     g_laplace, g_laplace_err, g_charge, g_charge_err = solver.compute_green_function(
         start_i, start_j
@@ -385,6 +412,7 @@ def load_or_compute(
     elapsed = time.perf_counter() - t0
 
     if rank == 0:
+        # Save the newly computed arrays so future runs can reuse them.
         np.save(paths["G_L"], g_laplace)
         np.save(paths["G_L_err"], g_laplace_err)
         np.save(paths["G_C"], g_charge)
@@ -499,11 +527,13 @@ def main() -> None:
     rank = comm.Get_rank()
     size = comm.Get_size()
 
+    # Create output directories once on rank 0 before all ranks continue.
     if rank == 0:
         os.makedirs("plots", exist_ok=True)
         os.makedirs("data", exist_ok=True)
     comm.Barrier()
 
+    # Set up the Monte Carlo solver.
     solver = GreenFunctionMC(
         grid_size=N,
         length=LENGTH,
@@ -520,6 +550,7 @@ def main() -> None:
 
     results = {}
 
+    # Evaluate the Green's functions at each of the three required points.
     for key, point in POINTS.items():
         x, y = point["xy"]
         results[key] = load_or_compute(
@@ -532,6 +563,7 @@ def main() -> None:
         )
 
     if rank == 0:
+        # Only rank 0 writes figures and prints the final summary.
         for key in POINTS:
             res = results[key]
             plot_boundary_exit_maps(res["G_L"], res["G_L_err"], solver, key)
