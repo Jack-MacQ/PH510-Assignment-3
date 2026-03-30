@@ -1,0 +1,37 @@
+point_key,bc_label,charge_label,phi_V,phi_err_V
+centre,"All edges +100 V","f = 0",100.00000000,9.98407286e-02
+corner,"All edges +100 V","f = 0",100.00000000,9.55596238e-02
+midface,"All edges +100 V","f = 0",100.00000000,9.57926586e-02
+centre,"Top/bot +100 V, left/right -100 V","f = 0",0.03760000,9.98407286e-02
+corner,"Top/bot +100 V, left/right -100 V","f = 0",-0.01980000,9.55596238e-02
+midface,"Top/bot +100 V, left/right -100 V","f = 0",-93.31380000,9.57926586e-02
+centre,"Top/left +200 V, bot 0 V, right -400 V","f = 0",0.03260000,2.44594718e-01
+corner,"Top/left +200 V, bot 0 V, right -400 V","f = 0",99.85360000,1.35415871e-01
+midface,"Top/left +200 V, bot 0 V, right -400 V","f = 0",192.61480000,1.91995138e-01
+centre,"All edges +100 V","Uniform 10 C",102.94750824,9.98408032e-02
+corner,"All edges +100 V","Uniform 10 C",100.03726940,9.55596245e-02
+midface,"All edges +100 V","Uniform 10 C",100.26207906,9.57926655e-02
+centre,"Top/bot +100 V, left/right -100 V","Uniform 10 C",2.98510824,9.98408032e-02
+corner,"Top/bot +100 V, left/right -100 V","Uniform 10 C",0.01746939,9.55596245e-02
+midface,"Top/bot +100 V, left/right -100 V","Uniform 10 C",-93.05172094,9.57926655e-02
+centre,"Top/left +200 V, bot 0 V, right -400 V","Uniform 10 C",2.98010824,2.44594749e-01
+corner,"Top/left +200 V, bot 0 V, right -400 V","Uniform 10 C",99.89086939,1.35415871e-01
+midface,"Top/left +200 V, bot 0 V, right -400 V","Uniform 10 C",192.87687906,1.91995141e-01
+centre,"All edges +100 V","Linear gradient",100.14745122,9.98407288e-02
+corner,"All edges +100 V","Linear gradient",100.00060795,9.55596238e-02
+midface,"All edges +100 V","Linear gradient",100.01312611,9.57926587e-02
+centre,"Top/bot +100 V, left/right -100 V","Linear gradient",0.18505122,9.98407288e-02
+corner,"Top/bot +100 V, left/right -100 V","Linear gradient",-0.01919205,9.55596238e-02
+midface,"Top/bot +100 V, left/right -100 V","Linear gradient",-93.30067389,9.57926587e-02
+centre,"Top/left +200 V, bot 0 V, right -400 V","Linear gradient",0.18005122,2.44594719e-01
+corner,"Top/left +200 V, bot 0 V, right -400 V","Linear gradient",99.85420795,1.35415871e-01
+midface,"Top/left +200 V, bot 0 V, right -400 V","Linear gradient",192.62792611,1.91995138e-01
+centre,"All edges +100 V","Exponential exp(-10|r|)",100.05075619,9.98407287e-02
+corner,"All edges +100 V","Exponential exp(-10|r|)",100.00010974,9.55596238e-02
+midface,"All edges +100 V","Exponential exp(-10|r|)",100.00201515,9.57926586e-02
+centre,"Top/bot +100 V, left/right -100 V","Exponential exp(-10|r|)",0.08835619,9.98407287e-02
+corner,"Top/bot +100 V, left/right -100 V","Exponential exp(-10|r|)",-0.01969026,9.55596238e-02
+midface,"Top/bot +100 V, left/right -100 V","Exponential exp(-10|r|)",-93.31178485,9.57926586e-02
+centre,"Top/left +200 V, bot 0 V, right -400 V","Exponential exp(-10|r|)",0.08335619,2.44594718e-01
+corner,"Top/left +200 V, bot 0 V, right -400 V","Exponential exp(-10|r|)",99.85370974,1.35415871e-01
+midface,"Top/left +200 V, bot 0 V, right -400 V","Exponential exp(-10|r|)",192.61681515,1.91995138e-01
