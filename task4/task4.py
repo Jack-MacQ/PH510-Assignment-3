@@ -17,11 +17,12 @@ Python Version: 3.9.21
 
 import os
 import sys
-import numpy as np
 from dataclasses import dataclass
 
+import numpy as np
+
 sys.path.append(os.path.abspath("../task2"))
-from green_function import GreenFunctionMC
+from green_function import GreenFunctionMC  # pylint: disable=import-error,wrong-import-position
 
 
 # ---------------
@@ -115,7 +116,7 @@ def charge_uniform(n: int, length: float) -> np.ndarray:
     return np.full((n, n), density, dtype=np.float64)
 
 
-def charge_gradient(n: int, length: float) -> np.ndarray:
+def charge_gradient(n: int, _length: float) -> np.ndarray:
     """Linear charge gradient: 1 C/m^2 at the top edge, 0 at the bottom.
 
     The density varies linearly from f = 0 at j = 0 (y = 0, bottom) to
@@ -123,7 +124,7 @@ def charge_gradient(n: int, length: float) -> np.ndarray:
 
     Args:
         n: Grid size.
-        length: Physical side length in metres.
+        _length: Physical side length in metres.
 
     Returns:
         N x N charge density array in C/m^2.
@@ -269,6 +270,7 @@ def evaluate_all(
 #  Output: tables
 # ----------------
 
+# pylint: disable=too-many-locals
 def print_results_table(all_results: list) -> None:
     """Print a formatted table of all Task 4 potentials to stdout."""
 
@@ -341,6 +343,7 @@ def print_results_table(all_results: list) -> None:
     print(sep)
     print("Potentials in Volts. sigma denotes the one-sigma Monte Carlo uncertainty.")
     print(sep)
+
 
 def save_results_csv(all_results: list, filename: str = "task4_results.csv") -> None:
     """Save all Task 4 results to a CSV file for Task 5 comparison.
@@ -420,9 +423,9 @@ def main() -> None:
 
     print("\nLoading Green's functions from Task 3 cache...")
     green_data = {}
-    for key in POINTS:
+    for key, point in POINTS.items():
         green_data[key] = load_green_functions(key)
-        print(f"  Loaded {POINTS[key]['name']}")
+        print(f"  Loaded {point['name']}")
 
     combos = build_combinations(N, LENGTH)
     print(f"\nBuilt {len(combos)} boundary condition / charge combinations.")
