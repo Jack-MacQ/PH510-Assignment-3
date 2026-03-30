@@ -1,0 +1,37 @@
+bc_label,charge_label,point_key,phi_mc_V,phi_mc_err_V,phi_sor_V,diff_V,n_sigma,agrees
+All edges +100 V,f = 0,centre,100.00000000,9.9841e-02,100.00000001,-0.00000001,0.0000,True
+All edges +100 V,f = 0,corner,100.00000000,9.5560e-02,100.00000000,-0.00000000,0.0000,True
+All edges +100 V,f = 0,midface,100.00000000,9.5793e-02,100.00000000,-0.00000000,0.0000,True
+"Top/bot +100 V, left/right -100 V",f = 0,centre,0.03760000,9.9841e-02,0.00000000,0.03760000,0.3766,True
+"Top/bot +100 V, left/right -100 V",f = 0,corner,-0.01980000,9.5560e-02,0.00000000,-0.01980000,0.2072,True
+"Top/bot +100 V, left/right -100 V",f = 0,midface,-93.31380000,9.5793e-02,-93.32788910,0.01408910,0.1471,True
+"Top/left +200 V, bot 0 V, right -400 V",f = 0,centre,0.03260000,2.4459e-01,-0.00000000,0.03260000,0.1333,True
+"Top/left +200 V, bot 0 V, right -400 V",f = 0,corner,99.85360000,1.3542e-01,99.82490295,0.02869705,0.2119,True
+"Top/left +200 V, bot 0 V, right -400 V",f = 0,midface,192.61480000,1.9200e-01,192.51233834,0.10246166,0.5337,True
+All edges +100 V,Uniform 10 C,centre,102.94750824,9.9841e-02,100.73665550,2.21085274,22.1438,False
+All edges +100 V,Uniform 10 C,corner,100.03726940,9.5560e-02,100.00930131,0.02796809,0.2927,True
+All edges +100 V,Uniform 10 C,midface,100.26207906,9.5793e-02,100.06554927,0.19652979,2.0516,False
+"Top/bot +100 V, left/right -100 V",Uniform 10 C,centre,2.98510824,9.9841e-02,0.73665549,2.24845275,22.5204,False
+"Top/bot +100 V, left/right -100 V",Uniform 10 C,corner,0.01746939,9.5560e-02,0.00930131,0.00816808,0.0855,True
+"Top/bot +100 V, left/right -100 V",Uniform 10 C,midface,-93.05172094,9.5793e-02,-93.26233983,0.21061889,2.1987,False
+"Top/left +200 V, bot 0 V, right -400 V",Uniform 10 C,centre,2.98010824,2.4459e-01,0.73665549,2.24345275,9.1721,False
+"Top/left +200 V, bot 0 V, right -400 V",Uniform 10 C,corner,99.89086939,1.3542e-01,99.83420425,0.05666514,0.4185,True
+"Top/left +200 V, bot 0 V, right -400 V",Uniform 10 C,midface,192.87687906,1.9200e-01,192.57788761,0.29899145,1.5573,True
+All edges +100 V,Linear gradient,centre,100.14745122,9.9841e-02,100.03683278,0.11061844,1.1079,True
+All edges +100 V,Linear gradient,corner,100.00060795,9.5560e-02,100.00015187,0.00045608,0.0048,True
+All edges +100 V,Linear gradient,midface,100.01312611,9.5793e-02,100.00327746,0.00984865,0.1028,True
+"Top/bot +100 V, left/right -100 V",Linear gradient,centre,0.18505122,9.9841e-02,0.03683277,0.14821845,1.4845,True
+"Top/bot +100 V, left/right -100 V",Linear gradient,corner,-0.01919205,9.5560e-02,0.00015186,-0.01934391,0.2024,True
+"Top/bot +100 V, left/right -100 V",Linear gradient,midface,-93.30067389,9.5793e-02,-93.32461163,0.02393774,0.2499,True
+"Top/left +200 V, bot 0 V, right -400 V",Linear gradient,centre,0.18005122,2.4459e-01,0.03683277,0.14321845,0.5855,True
+"Top/left +200 V, bot 0 V, right -400 V",Linear gradient,corner,99.85420795,1.3542e-01,99.82505481,0.02915314,0.2153,True
+"Top/left +200 V, bot 0 V, right -400 V",Linear gradient,midface,192.62792611,1.9200e-01,192.51561581,0.11231030,0.5850,True
+All edges +100 V,Exponential exp(-10|r|),centre,100.05075619,9.9841e-02,100.01268841,0.03806778,0.3813,True
+All edges +100 V,Exponential exp(-10|r|),corner,100.00010974,9.5560e-02,100.00002772,0.00008202,0.0009,True
+All edges +100 V,Exponential exp(-10|r|),midface,100.00201515,9.5793e-02,100.00050320,0.00151195,0.0158,True
+"Top/bot +100 V, left/right -100 V",Exponential exp(-10|r|),centre,0.08835619,9.9841e-02,0.01268840,0.07566779,0.7579,True
+"Top/bot +100 V, left/right -100 V",Exponential exp(-10|r|),corner,-0.01969026,9.5560e-02,0.00002771,-0.01971797,0.2063,True
+"Top/bot +100 V, left/right -100 V",Exponential exp(-10|r|),midface,-93.31178485,9.5793e-02,-93.32738590,0.01560105,0.1629,True
+"Top/left +200 V, bot 0 V, right -400 V",Exponential exp(-10|r|),centre,0.08335619,2.4459e-01,0.01268839,0.07066780,0.2889,True
+"Top/left +200 V, bot 0 V, right -400 V",Exponential exp(-10|r|),corner,99.85370974,1.3542e-01,99.82493066,0.02877908,0.2125,True
+"Top/left +200 V, bot 0 V, right -400 V",Exponential exp(-10|r|),midface,192.61681515,1.9200e-01,192.51284154,0.10397361,0.5415,True
