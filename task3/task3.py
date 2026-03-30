@@ -23,14 +23,15 @@ Python Version: 3.9.21
 import os
 import sys
 import time
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.ticker import FuncFormatter
-from mpi4py import MPI
+from mpi4py import MPI  # pylint: disable=no-name-in-module
 
 # Import the Monte Carlo solver from the Task 2 directory.
 sys.path.append(os.path.abspath("../task2"))
-from green_function import GreenFunctionMC
+from green_function import GreenFunctionMC  # pylint: disable=import-error,wrong-import-position
 
 
 # ---------------------------------------------------------------------
@@ -97,7 +98,7 @@ def boundary_to_grid(
     return val_grid, err_grid
 
 
-def sci_tick_label_math(x: float, pos: int) -> str:
+def sci_tick_label_math(x: float, _pos: int) -> str:
     """
     Format colour-bar tick labels in a compact scientific notation.
 
@@ -138,6 +139,8 @@ def add_sci_colorbar(fig, mappable, ax, label: str):
     return cbar
 
 
+# pylint: disable=too-many-arguments,too-many-positional-arguments
+# pylint: disable=too-many-locals
 def plot_two_maps(
     left_data: np.ndarray,
     right_data: np.ndarray,
@@ -299,6 +302,7 @@ def data_paths(key: str) -> dict:
     }
 
 
+# pylint: disable=too-many-arguments,too-many-positional-arguments
 def load_or_compute(
     key: str,
     solver: GreenFunctionMC,
@@ -371,37 +375,26 @@ def print_summary_table(results: dict, solver: GreenFunctionMC) -> None:
     print("Task 3 - Unified Green's Function Summary")
     print(sep)
     print(
-        "Grid: {}x{}, h = {:.1f} cm, walkers = {:,}".format(
-            solver.grid_size,
-            solver.grid_size,
-            solver.grid_spacing * 100.0,
-            solver.n_walkers,
-        )
+        f"Grid: {solver.grid_size}x{solver.grid_size}, "
+        f"h = {solver.grid_spacing * 100.0:.1f} cm, "
+        f"walkers = {solver.n_walkers:,}"
     )
     print(sep)
     print(
-        "{:<22} {:>10} {:>15} {:>15} {:>15} {:>10}".format(
-            "Point",
-            "G_L sum",
-            "G_L max sigma",
-            "G_C max val",
-            "G_C max sigma",
-            "Time (s)",
-        )
+        f"{'Point':<22} {'G_L sum':>10} {'G_L max sigma':>15} "
+        f"{'G_C max val':>15} {'G_C max sigma':>15} {'Time (s)':>10}"
     )
     print("-" * 88)
 
     for key in POINTS:
         res = results[key]
         print(
-            "{:<22} {:>10.6f} {:>15.3e} {:>15.4e} {:>15.3e} {:>10.1f}".format(
-                point_name(key),
-                res["G_L"].sum(),
-                res["G_L_err"].max(),
-                res["G_C"].max(),
-                res["G_C_err"].max(),
-                res["time"],
-            )
+            f"{point_name(key):<22} "
+            f"{res['G_L'].sum():>10.6f} "
+            f"{res['G_L_err'].max():>15.3e} "
+            f"{res['G_C'].max():>15.4e} "
+            f"{res['G_C_err'].max():>15.3e} "
+            f"{res['time']:>10.1f}"
         )
 
     print(sep)
@@ -423,7 +416,7 @@ def run_uniform_boundary_check(results: dict, solver: GreenFunctionMC) -> None:
     uniform_bc = np.ones((n, n), dtype=np.float64)
     zero_charge = np.zeros((n, n), dtype=np.float64)
 
-    print("{:<22} {:>15} {:>15}".format("Point", "phi (V)", "estimated sigma"))
+    print(f"{'Point':<22} {'phi (V)':>15} {'estimated sigma':>15}")
     print("-" * 96)
 
     for key in POINTS:
@@ -436,7 +429,7 @@ def run_uniform_boundary_check(results: dict, solver: GreenFunctionMC) -> None:
             res["G_L_err"],
             res["G_C_err"],
         )
-        print("{:<22} {:>15.6f} {:>15.3e}".format(point_name(key), phi, phi_err))
+        print(f"{point_name(key):<22} {phi:>15.6f} {phi_err:>15.3e}")
 
     print("-" * 96)
     print("Expected result: phi = 1.0 V at all three points.")
@@ -473,8 +466,8 @@ def main() -> None:
     if rank == 0:
         print()
         print("Task 3 - Standalone Green's function evaluation")
-        print("Grid: {}x{}, h = {:.1f} cm".format(N, N, solver.grid_spacing * 100.0))
-        print("Walkers: {:,} across {} MPI ranks".format(N_WALKERS, size))
+        print(f"Grid: {N}x{N}, h = {solver.grid_spacing * 100.0:.1f} cm")
+        print(f"Walkers: {N_WALKERS:,} across {size} MPI ranks")
         print("=" * 72)
 
     results = {}
