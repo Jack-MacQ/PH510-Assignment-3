@@ -24,13 +24,14 @@ Python Version: 3.9.21
 import os
 import sys
 import csv
-import numpy as np
 from dataclasses import dataclass
+
+import numpy as np
 
 # Reuse the deterministic Poisson solver from Task 1 rather than duplicating
 # the relaxation code here.
 sys.path.append(os.path.abspath("../task1"))
-from task1 import PoissonSOR
+from task1 import PoissonSOR  # pylint: disable=import-error,wrong-import-position
 
 
 # ---------------
@@ -128,14 +129,14 @@ def charge_uniform(n: int, length: float) -> np.ndarray:
     return np.full((n, n), 10.0 / length ** 2, dtype=np.float64)
 
 
-def charge_gradient(n: int, length: float) -> np.ndarray:
+def charge_gradient(n: int, _length: float) -> np.ndarray:
     """Construct the linear charge gradient from bottom to top.
 
     The density varies from 0 at the bottom edge to 1 C/m^2 at the top edge.
 
     Args:
         n: Grid size.
-        length: Physical side length in metres.
+        _length: Physical side length in metres.
 
     Returns:
         N x N charge-density array.
@@ -288,6 +289,7 @@ def extract_sor_values(phi: np.ndarray, h: float) -> dict:
 # ----------------
 
 @dataclass
+# pylint: disable=too-many-instance-attributes
 class ComparisonRow:
     """Store one row of the Task 5 comparison table.
 
@@ -353,6 +355,7 @@ def load_task4_csv(path: str) -> dict:
 #  Reporting
 # -------------
 
+# pylint: disable=too-many-locals
 def print_comparison_table(rows: list) -> None:
     """Print the full comparison table to stdout.
 
@@ -404,7 +407,7 @@ def print_comparison_table(rows: list) -> None:
     n_agree = 0
     prev_bc = None
 
-    for (bc_label, charge_label), group_rows in groups.items():
+    for (bc_label, _charge_label), group_rows in groups.items():
         # Leave a blank line between boundary-condition blocks so the table
         # is easier to scan by eye.
         if prev_bc is not None and bc_label != prev_bc:
@@ -489,6 +492,7 @@ def save_comparison_csv(
 #  Main
 # ------
 
+# pylint: disable=too-many-locals
 def main() -> None:
     """Run the full Task 5 comparison workflow.
 
