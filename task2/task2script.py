@@ -1,5 +1,5 @@
 """
-Driver script for evaluating Monte Carlo Green's functions at the three
+Driver script for evaluating Monte Carlo Green's functions at one of the
 sample points used in the assignment.
 
 This script calls the parallel random-walk solver in green_function.py and
@@ -14,10 +14,12 @@ repository for details.
 Python Version: 3.9.21
 """
 
+import os
 import time
+
 import matplotlib.pyplot as plt
 import numpy as np
-from mpi4py import MPI
+from mpi4py import MPI  # pylint: disable=no-name-in-module
 
 from green_function import GreenFunctionMC
 
@@ -40,9 +42,10 @@ def make_boundary_array(
     return phi
 
 
+# pylint: disable=too-many-locals
 def plot_green_function_laplace(
-    G_laplace: np.ndarray,
-    G_laplace_err: np.ndarray,
+    g_laplace: np.ndarray,
+    g_laplace_err: np.ndarray,
     solver: GreenFunctionMC,
     label: str,
 ) -> None:
@@ -61,15 +64,15 @@ def plot_green_function_laplace(
     # Put the boundary values back onto a 2D grid for plotting
     for b_idx in range(n_b):
         bi, bj = solver.linear_to_boundary(b_idx)
-        phi_map[bi, bj] = G_laplace[b_idx]
-        err_map[bi, bj] = G_laplace_err[b_idx]
+        phi_map[bi, bj] = g_laplace[b_idx]
+        err_map[bi, bj] = g_laplace_err[b_idx]
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
     for ax, data, title in zip(
         axes,
         [phi_map, err_map],
-        [f"G_Laplace - {label}", f"G_Laplace standard error - {label}"],
+        [f"G_laplace - {label}", f"G_laplace standard error - {label}"],
     ):
         im = ax.imshow(data.T, origin="lower", cmap="viridis")
         fig.colorbar(im, ax=ax)
@@ -85,8 +88,8 @@ def plot_green_function_laplace(
 
 
 def plot_green_function_charge(
-    G_charge: np.ndarray,
-    G_charge_err: np.ndarray,
+    g_charge: np.ndarray,
+    g_charge_err: np.ndarray,
     label: str,
 ) -> None:
     """
@@ -96,7 +99,7 @@ def plot_green_function_charge(
 
     for ax, data, title in zip(
         axes,
-        [G_charge, G_charge_err],
+        [g_charge, g_charge_err],
         [f"G_charge - {label}", f"G_charge standard error - {label}"],
     ):
         im = ax.imshow(data.T, origin="lower", cmap="plasma")
@@ -112,38 +115,36 @@ def plot_green_function_charge(
     print(f"  Saved {filename}")
 
 
+# pylint: disable=too-many-locals
 def main():
     """
     Evaluate and save Green's functions at the three points specified for
     the later stages of the assignment.
     """
-    
-    import os
-    
     os.makedirs("plots", exist_ok=True)
     os.makedirs("data", exist_ok=True)
-    
+
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
 
     # Grid and Monte Carlo setup
-    N = 101
-    LENGTH = 1.0
-    N_WALKERS = 500_000
+    n = 101
+    length = 1.0
+    n_walkers = 500_000
 
     solver = GreenFunctionMC(
-        grid_size=N,
-        length=LENGTH,
-        n_walkers=N_WALKERS,
+        grid_size=n,
+        length=length,
+        n_walkers=n_walkers,
         seed=12345,
     )
     h = solver.grid_spacing
 
     if rank == 0:
         print(
-            f"Grid: {N}x{N}, h = {h * 100:.1f} cm, "
-            f"{N_WALKERS} walkers on {size} ranks"
+            f"Grid: {n}x{n}, h = {h * 100:.1f} cm, "
+            f"{n_walkers} walkers on {size} ranks"
         )
         print("-" * 60)
 
@@ -165,7 +166,7 @@ def main():
             )
 
         t0 = time.perf_counter()
-        G_L, G_L_err, G_C, G_C_err = solver.compute_green_function(si, sj)
+        g_laplace, g_laplace_err, g_charge, g_charge_err = solver.compute_green_function(si, sj)
         t1 = time.perf_counter()
 
         if rank == 0:
@@ -173,26 +174,26 @@ def main():
 
             # Basic checks on the output
             print(f"  Wall time: {wall_time:.2f} s")
-            print(f"  G_laplace sum: {G_L.sum():.6f}  (expect 1.0)")
-            print(f"  G_laplace max standard error: {G_L_err.max():.2e}")
-            print(f"  G_charge max value: {G_C.max():.4e}")
-            print(f"  G_charge max standard error: {G_C_err.max():.2e}")
+            print(f"  G_laplace sum: {g_laplace.sum():.6f}  (expect 1.0)")
+            print(f"  G_laplace max standard error: {g_laplace_err.max():.2e}")
+            print(f"  G_charge max value: {g_charge.max():.4e}")
+            print(f"  G_charge max standard error: {g_charge_err.max():.2e}")
 
             # Save arrays for later use in potential reconstruction
-            np.save(f"data/G_laplace_{label}.npy", G_L)
-            np.save(f"data/G_laplace_err_{label}.npy", G_L_err)
-            np.save(f"data/G_charge_{label}.npy", G_C)
-            np.save(f"data/G_charge_err_{label}.npy", G_C_err)
+            np.save(f"data/G_laplace_{label}.npy", g_laplace)
+            np.save(f"data/G_laplace_err_{label}.npy", g_laplace_err)
+            np.save(f"data/G_charge_{label}.npy", g_charge)
+            np.save(f"data/G_charge_err_{label}.npy", g_charge_err)
 
             # Save figures for inspection
-            plot_green_function_laplace(G_L, G_L_err, solver, label)
-            plot_green_function_charge(G_C, G_C_err, label)
+            plot_green_function_laplace(g_laplace, g_laplace_err, solver, label)
+            plot_green_function_charge(g_charge, g_charge_err, label)
 
             results[label] = {
-                "G_L": G_L,
-                "G_L_err": G_L_err,
-                "G_C": G_C,
-                "G_C_err": G_C_err,
+                "G_L": g_laplace,
+                "G_L_err": g_laplace_err,
+                "G_C": g_charge,
+                "G_C_err": g_charge_err,
                 "time": wall_time,
             }
 
@@ -200,9 +201,9 @@ def main():
     # with boundary phi = 1 everywhere and zero charge, the result should be 1
     if rank == 0:
         print("\n--- Check (uniform 1 V boundary, f = 0) ---")
-        n = solver.grid_size
-        uniform_bc = np.ones((n, n), dtype=np.float64)
-        zero_charge = np.zeros((n, n), dtype=np.float64)
+        n_grid = solver.grid_size
+        uniform_bc = np.ones((n_grid, n_grid), dtype=np.float64)
+        zero_charge = np.zeros((n_grid, n_grid), dtype=np.float64)
 
         for label, res in results.items():
             phi, phi_err = solver.potential_from_green(
